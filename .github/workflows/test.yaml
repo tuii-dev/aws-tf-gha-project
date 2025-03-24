@@ -1,3 +1,14 @@
+# Notes:
+# Github account needs to access AWS resources
+# We will create an IAM role that will be used by the workflow to access AWS resources
+# We first must create an OpenID Connect identity provider in AWS
+# Required settings - Provider URL and Audience cant be found at:
+# https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+
+# Once we create the OpenID Connect provider, we create a role for the provider and assign it permissions
+# to access AWS resources.  We then use the role to configure the workflow to access AWS resources.
+# We go to github.com > Settings > Secrets and variables > Actions > Secrets
+
 # Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
 name: List S3 Buckets
 
@@ -27,6 +38,7 @@ jobs:
     steps:
       # Step 1: Configure AWS credentials.
       - name: Configure AWS Credentials
+        # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
         uses: aws-actions/configure-aws-credentials@v4 # Use the AWS credentials configuration action.
         with:
           # Assume an IAM role for accessing AWS resources.
