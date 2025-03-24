@@ -8,6 +8,15 @@ on:
       - main # Trigger on push to the main branch.
   workflow_dispatch: # Allow manual triggering of the workflow.
 
+permissions:
+  # Allow writing of the ID token, which is necessary for requesting a JWT (JSON Web Token).
+  # This is used in workflows that require authentication with external services.
+  id-token: write
+
+  # Allow reading of the repository contents, which is necessary for actions like actions/checkout.
+  # This permission is required to access files within the repository.
+  contents: read
+
 # Define a job named list_s3_buckets.
 jobs:
   list_s3_buckets:
