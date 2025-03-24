@@ -1,14 +1,37 @@
-name: Test
+# Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
+name: List S3 Buckets
 
+# Trigger the workflow on push events to the main branch or when manually dispatched.
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Trigger on push to the main branch.
+  workflow_dispatch: # Allow manual triggering of the workflow.
 
+# Define a job named list_s3_buckets.
 jobs:
-  log_message:
+  list_s3_buckets:
+    # Specify the environment where the job will run.
     runs-on: ubuntu-latest
+
+    # Steps are a sequence of tasks performed as part of the job.
     steps:
-      - name: Log
-        run: echo "Hello World"
+      # Step 1: Configure AWS credentials.
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4 # Use the AWS credentials configuration action.
+        with:
+          # Assume an IAM role for accessing AWS resources.
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          # Specify the AWS region where the resources are located.
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 2: List S3 buckets.
+      - name: List S3 Buckets
+        env:
+          # Set the AWS region as an environment variable.
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Print a message to indicate the start of the S3 bucket listing.
+          echo "Listing S3 buckets..."
+          # Use the AWS CLI to list all S3 buckets.
+          aws s3 ls
