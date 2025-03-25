@@ -10,7 +10,7 @@
 # We go to github.com > Settings > Secrets and variables > Actions > Secrets
 
 # Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
-name: Create S3 Bucket
+name: Create S3 Bucket From Terraform / Github Action Workflow
 
 # Trigger the workflow on push events to the main branch or when manually dispatched.
 on:
