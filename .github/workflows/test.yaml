@@ -82,3 +82,9 @@ jobs:
           TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
         run: terraform apply -auto-approve
         working-directory: infrastructure
+
+      - name: Upload HTML files to S3
+        run: |
+          aws s3 cp index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html
+          aws s3 cp --recursive styles/ s3://${{ secrets.S3_BUCKET_NAME }}/styles/
+          aws s3 cp --recursive images/ s3://${{ secrets.S3_BUCKET_NAME }}/images/
