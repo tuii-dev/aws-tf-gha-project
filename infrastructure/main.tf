@@ -4,11 +4,6 @@ resource "aws_s3_bucket" "static_site" {
     bucket = var.bucket_name
 }
 
-# Create an S3 bucket to store static website content
-resource "aws_s3_bucket" "static_site" {
-    bucket = var.bucket_name
-}
-
 # Configure the S3 bucket to serve static website content
 resource "aws_s3_bucket_website_configuration" "static_website_config" {
     bucket = aws_s3_bucket.static_site.id
