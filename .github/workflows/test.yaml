@@ -10,7 +10,7 @@
 # We go to github.com > Settings > Secrets and variables > Actions > Secrets
 
 # Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
-name: List S3 Buckets
+name: Create S3 Bucket
 
 # Trigger the workflow on push events to the main branch or when manually dispatched.
 on:
@@ -28,15 +28,19 @@ permissions:
   # This permission is required to access files within the repository.
   contents: read
 
-# Define a job named list_s3_buckets.
+# Define a job named create_s3_bucket.
 jobs:
-  list_s3_buckets:
+  create_s3_bucket:
     # Specify the environment where the job will run.
     runs-on: ubuntu-latest
 
     # Steps are a sequence of tasks performed as part of the job.
     steps:
-      # Step 1: Configure AWS credentials.
+      # Step 1: Checkout the repository.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials.
       - name: Configure AWS Credentials
         # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
         uses: aws-actions/configure-aws-credentials@v4 # Use the AWS credentials configuration action.
@@ -46,13 +50,35 @@ jobs:
           # Specify the AWS region where the resources are located.
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Step 2: List S3 buckets.
-      - name: List S3 Buckets
+      # Step 3 Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure
+
+      # Run terraform plan to generate an execution plan.
+      # The plan is saved in terraform.tfplan file.
+      # The -var flag is used to pass the bucket name as a variable.
+      # The bucket name is saved as an environment variable.
+      - name: Terraform Plan
+        working-directory: infrastructure
         env:
-          # Set the AWS region as an environment variable.
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          # Set the bucket name as an environment variable.
+          # This variable is used in the terraform configuration files.
+          BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          # Print a message to indicate the start of the S3 bucket listing.
-          echo "Listing S3 buckets..."
-          # Use the AWS CLI to list all S3 buckets.
-          aws s3 ls
+          terraform plan \
+            -var="bucket_name=${{ secrets.S3_BUCKET_NAME }}"
+
+      # Apply the Terraform configuration to create the S3 bucket.
+      # The TF_VAR_bucket_name environment variable is used to pass the bucket name
+      # to the Terraform configuration.
+      - name: Terraform Apply
+        env:
+          # Set the bucket name environment variable.
+          # This variable is used in the terraform configuration files.
+          TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+        run: terraform apply -auto-approve
+        working-directory: infrastructure
