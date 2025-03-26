@@ -62,3 +62,46 @@ resource "aws_acm_certificate" "keeperofthewatchfire_certificate" {
         create_before_destroy = true
     }
 }
+
+# Get the route53 zone for the domain
+data "aws_route53_zone" "domain_zone" {
+    name = "keeperofthewatchfire.com"
+}
+
+# Create the certificate validation records
+resource "aws_route53_record" "keeperofthewatchfire_cer_validation" {
+    for_each = {
+        for dvo in aws_acm_certificate.keeperofthewatchfire_certificate.domain_validation_options : dvo.domain_name
+        => {
+            name   = dvo.resource_record_name
+            record = dvo.resource_record_value
+            type   = dvo.resource_record_type
+        }
+    }
+
+    # The name of the record to create
+    name    = each.value.name
+
+    # The value of the record
+    records = [each.value.record]
+
+    # The time to live of the record in seconds
+    ttl     = 60
+
+    # The type of record to create
+    type    = each.value.type
+    zone_id = data.aws_route53_zone.domain_zone.zone_id
+}
+
+# After creating the certificate validation records, validate the certificate
+resource "aws_acm_certificate_validation" "keeperofthewatchfire_cert_validation" {
+    # The ARN of the certificate to validate
+    certificate_arn         = aws_acm_certificate.keeperofthewatchfire_certificate.arn
+
+    # The fully qualified domain names of the validation records
+    # This is a list of the FQDNs of the records created above
+    validation_record_fqdns = [for record in aws_route53_record.keeperofthewatchfire_cer_validation : record.fqdn]
+}
+
+
+    
