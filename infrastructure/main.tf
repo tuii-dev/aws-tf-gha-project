@@ -42,8 +42,6 @@ resource "aws_s3_bucket_public_access_block" "static_site_access" {
     bucket = aws_s3_bucket.static_site.id
 
     # Allow public read access to the bucket
-    block_public_acls       = true
-    block_public_policy     = true
     ignore_public_acls      = true
     restrict_public_buckets = true
 }
