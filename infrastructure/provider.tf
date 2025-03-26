@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "ca-central-1"
+# this region is required to use ACM (AWS Certificate Manager) with CloudFront
+  region = "us-east-1" 
 }
 
 terraform {

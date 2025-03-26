@@ -47,3 +47,18 @@ resource "aws_s3_bucket_public_access_block" "static_site_access" {
     ignore_public_acls      = true
     restrict_public_buckets = true
 }
+
+resource "aws_acm_certificate" "keeperofthewatchfire_certificate" {
+    domain_name = "keeperofthewatchfire.com"
+    validation_method = "DNS"
+
+    subject_alternative_names = ["www.keeperofthewatchfire.com"]
+
+    tags = {
+        Name = "keeperofthewatchfire.com SSL Certificate"
+    }
+
+    lifecycle {
+        create_before_destroy = true
+    }
+}
