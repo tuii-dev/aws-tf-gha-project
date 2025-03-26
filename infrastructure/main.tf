@@ -222,6 +222,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
 # The S3 bucket policy is used to grant public read access to the S3 bucket
 resource "aws_s3_bucket_policy" "static_site_policy" {
+    provider = aws.ca-central-1
     # The bucket of the policy
     bucket = aws_s3_bucket.static_site.id
 
