@@ -1,6 +1,7 @@
 # Static Site is not the name of the bucket, its the name terraform uses 
 # to track the resources
 resource "aws_s3_bucket" "static_site" {
+    provider = aws.central1
     bucket = var.bucket_name
 }
 
@@ -40,6 +41,7 @@ resource "aws_s3_bucket" "static_site" {
 # Allow public access to the S3 bucket
 resource "aws_s3_bucket_public_access_block" "static_site_access" {
     bucket = aws_s3_bucket.static_site.id
+    provider = aws.central1
 
     # Allow public read access to the bucket
     ignore_public_acls      = true
