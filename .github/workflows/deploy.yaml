@@ -10,7 +10,7 @@
 # We go to github.com > Settings > Secrets and variables > Actions > Secrets
 
 # Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
-name: Create S3 Bucket From Terraform / Github Action Workflow
+name: Deploy The Website From Terraform / Github Action Workflow
 
 # Trigger the workflow on push events to the main branch or when manually dispatched.
 on:
@@ -28,9 +28,9 @@ permissions:
   # This permission is required to access files within the repository.
   contents: read
 
-# Define a job named create_s3_bucket.
+# Define a job named deploy.
 jobs:
-  create_s3_bucket:
+  deploy:
     # Specify the environment where the job will run.
     runs-on: ubuntu-latest
 

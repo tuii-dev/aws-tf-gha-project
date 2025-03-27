@@ -1,0 +1,90 @@
+# Notes:
+# Github account needs to access AWS resources
+# We will create an IAM role that will be used by the workflow to access AWS resources
+# We first must create an OpenID Connect identity provider in AWS
+# Required settings - Provider URL and Audience cant be found at:
+# https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+
+# Once we create the OpenID Connect provider, we create a role for the provider and assign it permissions
+# to access AWS resources.  We then use the role to configure the workflow to access AWS resources.
+# We go to github.com > Settings > Secrets and variables > Actions > Secrets
+
+# Workflow name: This defines the name of the workflow that will be displayed in the GitHub Actions UI.
+name: Destroy The Website From Terraform / Github Action Workflow
+
+# Trigger the workflow on push events to the main branch or when manually dispatched.
+on:
+  # Run manually only
+  #   push:
+  #     branches:
+  #       - main # Trigger on push to the main branch.
+  workflow_dispatch: # Allow manual triggering of the workflow.
+
+permissions:
+  # Allow writing of the ID token, which is necessary for requesting a JWT (JSON Web Token).
+  # This is used in workflows that require authentication with external services.
+  id-token: write
+
+  # Allow reading of the repository contents, which is necessary for actions like actions/checkout.
+  # This permission is required to access files within the repository.
+  contents: read
+
+# Define a job named destroy.
+jobs:
+  destroy:
+    # Specify the environment where the job will run.
+    runs-on: ubuntu-latest
+
+    # Steps are a sequence of tasks performed as part of the job.
+    steps:
+      # Step 1: Checkout the repository.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials.
+      - name: Configure AWS Credentials
+        # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
+        uses: aws-actions/configure-aws-credentials@v4 # Use the AWS credentials configuration action.
+        with:
+          # Assume an IAM role for accessing AWS resources.
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          # Specify the AWS region where the resources are located.
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 3: Empty S3 bucket
+      - name: Empty S3 bucket
+        run: |
+          aws s3 rm s3://${{ secrets.S3_BUCKET_NAME }} --recursive
+
+      # Step 4 Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infrastructure
+
+      # Run terraform plan to generate an execution plan.
+      # The plan is saved in terraform.tfplan file.
+      # The -var flag is used to pass the bucket name as a variable.
+      # The bucket name is saved as an environment variable.
+      - name: Terraform Plan
+        working-directory: infrastructure
+        env:
+          # Set the bucket name as an environment variable.
+          # This variable is used in the terraform configuration files.
+          BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        run: |
+          terraform plan \
+            -var="bucket_name=${{ secrets.S3_BUCKET_NAME }}"
+
+      # Destroy the Terraform configuration.
+      # The TF_VAR_bucket_name environment variable is used to pass the bucket name
+      # to the Terraform configuration.
+      - name: Terraform Destroy
+        env:
+          # Set the bucket name environment variable.
+          # This variable is used in the terraform configuration files.
+          TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+        run: terraform destroy -auto-approve
+        working-directory: infrastructure
